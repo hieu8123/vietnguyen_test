@@ -1,517 +1,590 @@
-import React, { useState } from 'react';
-import {
-  Form,
-  Input,
-  InputNumber,
-  DatePicker,
-  TimePicker,
-  Radio,
-  Button,
-  Card,
-  Row,
-  Col,
-  Space,
-  Typography,
-  message,
-  Table,
-  Modal,
-  Tag,
-} from 'antd';
-import {
-  SaveOutlined,
-  PrinterOutlined,
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  SearchOutlined,
-} from '@ant-design/icons';
+import React, { useState, useEffect } from 'react';
+import { Button, Space, Modal, Form, Input, Select, DatePicker, InputNumber, message, Radio } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
+import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
-import type { Dayjs } from 'dayjs';
 
-const { Title, Text } = Typography;
+import { FormCard, DataTable, StatusTag, SearchForm, ExportButton, PrintButton } from '../../shared/components';
+import type { MachineReport } from '../../types';
+
+const { Option } = Select;
 const { TextArea } = Input;
 const { RangePicker } = DatePicker;
 
-interface MachineReportData {
-  key: string;
-  po: string;
-  drawingCode: string;
-  rev: string;
-  step: string;
-  inputQuantity: number;
-  outputQuantity: number;
-  defectQuantity: number;
-  nextStep: string;
-  setupTime: [Dayjs, Dayjs] | null;
-  machineTime: [Dayjs, Dayjs] | null;
-  avgTimePerPart: number;
-  qcTime: [Dayjs, Dayjs] | null;
-  setupEvaluation: string;
-  issues: string;
-  createdDate: string;
-  createdBy: string;
-  status: string;
-}
-
-const MachineReport: React.FC = () => {
-  const [form] = Form.useForm();
+const MachineReportPage: React.FC = () => {
+  const [data, setData] = useState<MachineReport[]>([]);
   const [loading, setLoading] = useState(false);
-  const [dataSource, setDataSource] = useState<MachineReportData[]>([
-    {
-      key: '1',
-      po: 'PO-2024-001',
-      drawingCode: 'DWG-A1-001',
-      rev: 'R1',
-      step: 'CNC Mill',
-      inputQuantity: 100,
-      outputQuantity: 98,
-      defectQuantity: 2,
-      nextStep: 'QC',
-      setupTime: null,
-      machineTime: null,
-      avgTimePerPart: 5.5,
-      qcTime: null,
-      setupEvaluation: 'Đạt',
-      issues: 'Không có vấn đề',
-      createdDate: '2024-01-10',
-      createdBy: 'Nguyễn Văn A',
-      status: 'completed',
-    },
-    {
-      key: '2',
-      po: 'PO-2024-002',
-      drawingCode: 'DWG-B2-003',
-      rev: 'R2',
-      step: 'Milling',
-      inputQuantity: 200,
-      outputQuantity: 195,
-      defectQuantity: 5,
-      nextStep: 'Surface Treatment',
-      setupTime: null,
-      machineTime: null,
-      avgTimePerPart: 3.2,
-      qcTime: null,
-      setupEvaluation: 'Đạt',
-      issues: 'Cần điều chỉnh tốc độ cắt',
-      createdDate: '2024-01-11',
-      createdBy: 'Trần Thị B',
-      status: 'processing',
-    },
-  ]);
-  const [editingKey, setEditingKey] = useState('');
-  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [editingRecord, setEditingRecord] = useState<MachineReport | null>(null);
+  const [form] = Form.useForm();
 
-  const handleSubmit = async (values: any) => {
+  // Mock data
+  const mockData: MachineReport[] = [
+    {
+      id: '1',
+      reportNumber: 'RPT-2024-001',
+      poId: 'PO-2024-001',
+      machineId: 'CNC-001',
+      machineName: 'CNC Mill 01',
+      operatorId: 'OP-001',
+      operatorName: 'Nguyễn Văn A',
+      shift: 'morning',
+      date: '2024-01-10',
+      setupTime: 30,
+      runTime: 240,
+      outputQuantity: 98,
+      scrapQuantity: 2,
+      defectQuantity: 1,
+      downtime: 15,
+      downtimeReason: 'Thay dao cắt',
+      qcFeedback: 'Chất lượng tốt',
+      notes: 'Máy hoạt động ổn định',
+      status: 'completed',
+      createdAt: '2024-01-10T08:00:00Z',
+      updatedAt: '2024-01-10T16:00:00Z',
+      createdBy: 'OP-001',
+      updatedBy: 'OP-001'
+    },
+    {
+      id: '2',
+      reportNumber: 'RPT-2024-002',
+      poId: 'PO-2024-002',
+      machineId: 'CNC-002',
+      machineName: 'CNC Mill 02',
+      operatorId: 'OP-002',
+      operatorName: 'Trần Thị B',
+      shift: 'afternoon',
+      date: '2024-01-10',
+      setupTime: 45,
+      runTime: 180,
+      outputQuantity: 150,
+      scrapQuantity: 3,
+      defectQuantity: 2,
+      downtime: 20,
+      downtimeReason: 'Bảo trì định kỳ',
+      notes: 'Cần kiểm tra hệ thống làm mát',
+      status: 'in_progress',
+      createdAt: '2024-01-10T14:00:00Z',
+      updatedAt: '2024-01-10T18:00:00Z',
+      createdBy: 'OP-002',
+      updatedBy: 'OP-002'
+    },
+    {
+      id: '3',
+      reportNumber: 'RPT-2024-003',
+      poId: 'PO-2024-003',
+      machineId: 'LATHE-001',
+      machineName: 'CNC Lathe 01',
+      operatorId: 'OP-003',
+      operatorName: 'Lê Văn C',
+      shift: 'night',
+      date: '2024-01-11',
+      setupTime: 60,
+      runTime: 300,
+      outputQuantity: 75,
+      scrapQuantity: 1,
+      defectQuantity: 0,
+      downtime: 10,
+      downtimeReason: 'Kiểm tra chất lượng',
+      qcFeedback: 'Đạt yêu cầu',
+      notes: 'Sản xuất đúng tiến độ',
+      status: 'completed',
+      createdAt: '2024-01-11T22:00:00Z',
+      updatedAt: '2024-01-12T06:00:00Z',
+      createdBy: 'OP-003',
+      updatedBy: 'OP-003'
+    }
+  ];
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
     setLoading(true);
     try {
-      // Format the data
-      const formattedData: MachineReportData = {
-        key: Date.now().toString(),
-        po: values.po,
-        drawingCode: values.drawingCode,
-        rev: values.rev,
-        step: values.step,
-        inputQuantity: values.inputQuantity,
-        outputQuantity: values.outputQuantity,
-        defectQuantity: values.defectQuantity,
-        nextStep: values.nextStep,
-        setupTime: values.setupTime,
-        machineTime: values.machineTime,
-        avgTimePerPart: values.avgTimePerPart,
-        qcTime: values.qcTime,
-        setupEvaluation: values.setupEvaluation,
-        issues: values.issues,
-        createdDate: dayjs().format('YYYY-MM-DD'),
-        createdBy: 'Admin',
-        status: 'processing',
-      };
-
-      // Add to table
-      setDataSource([...dataSource, formattedData]);
-      
-      message.success('Lưu báo cáo thành công!');
-      form.resetFields();
-      setIsModalVisible(false);
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setData(mockData);
     } catch (error) {
-      message.error('Có lỗi xảy ra khi lưu báo cáo!');
+      message.error('Không thể tải dữ liệu');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = (key: string) => {
-    Modal.confirm({
-      title: 'Xác nhận xóa',
-      content: 'Bạn có chắc chắn muốn xóa báo cáo này?',
-      okText: 'Xóa',
-      cancelText: 'Hủy',
-      onOk: () => {
-        setDataSource(dataSource.filter(item => item.key !== key));
-        message.success('Đã xóa báo cáo!');
-      },
-    });
+  const handleCreate = () => {
+    setEditingRecord(null);
+    form.resetFields();
+    setModalVisible(true);
   };
 
-  const columns = [
+  const handleEdit = (record: MachineReport) => {
+    setEditingRecord(record);
+    form.setFieldsValue({
+      ...record,
+      date: dayjs(record.date)
+    });
+    setModalVisible(true);
+  };
+
+  const handleDelete = async (record: MachineReport) => {
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setData(data.filter(item => item.id !== record.id));
+      message.success('Đã xóa báo cáo máy');
+    } catch (error) {
+      message.error('Không thể xóa báo cáo máy');
+    }
+  };
+
+  const handleSubmit = async (values: any) => {
+    try {
+      setLoading(true);
+      const formData = {
+        ...values,
+        date: values.date.format('YYYY-MM-DD'),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        createdBy: 'current_user'
+      };
+
+      if (editingRecord) {
+        // Update existing record
+        const updatedData = data.map(item => 
+          item.id === editingRecord.id 
+            ? { ...item, ...formData, updatedBy: 'current_user' }
+            : item
+        );
+        setData(updatedData);
+        message.success('Đã cập nhật báo cáo máy');
+      } else {
+        // Create new record
+        const newRecord: MachineReport = {
+          id: Date.now().toString(),
+          reportNumber: `RPT-2024-${String(data.length + 1).padStart(3, '0')}`,
+          ...formData
+        };
+        setData([newRecord, ...data]);
+        message.success('Đã tạo báo cáo máy mới');
+      }
+
+      setModalVisible(false);
+      form.resetFields();
+    } catch (error) {
+      message.error('Có lỗi xảy ra');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = (values: any) => {
+    // Implement search logic
+    console.log('Search values:', values);
+  };
+
+  const columns: ColumnsType<MachineReport> = [
+    {
+      title: 'Số báo cáo',
+      dataIndex: 'reportNumber',
+      key: 'reportNumber',
+      width: 120,
+      fixed: 'left',
+    },
     {
       title: 'PO',
-      dataIndex: 'po',
-      key: 'po',
+      dataIndex: 'poId',
+      key: 'poId',
       width: 120,
     },
     {
-      title: 'Mã bản vẽ',
-      dataIndex: 'drawingCode',
-      key: 'drawingCode',
+      title: 'Máy',
+      dataIndex: 'machineName',
+      key: 'machineName',
+      width: 150,
+    },
+    {
+      title: 'Người vận hành',
+      dataIndex: 'operatorName',
+      key: 'operatorName',
       width: 120,
     },
     {
-      title: 'Rev',
-      dataIndex: 'rev',
-      key: 'rev',
-      width: 60,
+      title: 'Ca',
+      dataIndex: 'shift',
+      key: 'shift',
+      width: 80,
+      render: (value) => {
+        const shiftMap = {
+          morning: 'Sáng',
+          afternoon: 'Chiều', 
+          night: 'Đêm'
+        };
+        return shiftMap[value as keyof typeof shiftMap] || value;
+      },
     },
     {
-      title: 'Công đoạn',
-      dataIndex: 'step',
-      key: 'step',
+      title: 'Ngày',
+      dataIndex: 'date',
+      key: 'date',
       width: 100,
+      render: (value) => dayjs(value).format('DD/MM/YYYY'),
     },
     {
-      title: 'SL đầu vào',
-      dataIndex: 'inputQuantity',
-      key: 'inputQuantity',
+      title: 'Setup (phút)',
+      dataIndex: 'setupTime',
+      key: 'setupTime',
       width: 100,
-      align: 'right' as const,
+      align: 'right',
     },
     {
-      title: 'SL đầu ra',
+      title: 'Chạy máy (phút)',
+      dataIndex: 'runTime',
+      key: 'runTime',
+      width: 120,
+      align: 'right',
+    },
+    {
+      title: 'Sản lượng',
       dataIndex: 'outputQuantity',
       key: 'outputQuantity',
       width: 100,
-      align: 'right' as const,
+      align: 'right',
     },
     {
-      title: 'SL lỗi',
+      title: 'Phế phẩm',
+      dataIndex: 'scrapQuantity',
+      key: 'scrapQuantity',
+      width: 100,
+      align: 'right',
+      render: (value) => (
+        <span style={{ color: value > 0 ? '#ff4d4f' : '#52c41a' }}>
+          {value}
+        </span>
+      ),
+    },
+    {
+      title: 'Lỗi',
       dataIndex: 'defectQuantity',
       key: 'defectQuantity',
       width: 80,
-      align: 'right' as const,
-      render: (text: number) => (
-        <Text type={text > 0 ? 'danger' : 'success'}>{text}</Text>
+      align: 'right',
+      render: (value) => (
+        <span style={{ color: value > 0 ? '#ff4d4f' : '#52c41a' }}>
+          {value}
+        </span>
       ),
     },
     {
-      title: 'Đánh giá Setup',
-      dataIndex: 'setupEvaluation',
-      key: 'setupEvaluation',
+      title: 'Downtime (phút)',
+      dataIndex: 'downtime',
+      key: 'downtime',
       width: 120,
-      render: (text: string) => (
-        <Tag color={text === 'Đạt' ? 'green' : 'red'}>{text}</Tag>
-      ),
-    },
-    {
-      title: 'Ngày tạo',
-      dataIndex: 'createdDate',
-      key: 'createdDate',
-      width: 100,
-    },
-    {
-      title: 'Người tạo',
-      dataIndex: 'createdBy',
-      key: 'createdBy',
-      width: 120,
+      align: 'right',
     },
     {
       title: 'Trạng thái',
       dataIndex: 'status',
       key: 'status',
-      width: 100,
-      render: (status: string) => {
-        let color = 'default';
-        let text = '';
-        
-        switch(status) {
-          case 'completed':
-            color = 'success';
-            text = 'Hoàn thành';
-            break;
-          case 'processing':
-            color = 'processing';
-            text = 'Đang xử lý';
-            break;
-          default:
-            text = status;
-        }
-        
-        return <Tag color={color}>{text}</Tag>;
-      },
+      width: 120,
+      render: (value) => <StatusTag status={value} type="production" />,
+    },
+  ];
+
+  const searchFields = [
+    {
+      name: 'reportNumber',
+      label: 'Số báo cáo',
+      type: 'text' as const,
+      span: 6,
     },
     {
-      title: 'Thao tác',
-      key: 'action',
-      fixed: 'right' as const,
-      width: 120,
-      render: (_: any, record: MachineReportData) => (
-        <Space size="small">
-          <Button
-            type="link"
-            icon={<EditOutlined />}
-            onClick={() => {
-              form.setFieldsValue(record);
-              setEditingKey(record.key);
-              setIsModalVisible(true);
-            }}
-          />
-          <Button
-            type="link"
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => handleDelete(record.key)}
-          />
-          <Button
-            type="link"
-            icon={<PrinterOutlined />}
-            onClick={() => message.info('Đang in báo cáo...')}
-          />
-        </Space>
-      ),
+      name: 'poId',
+      label: 'PO',
+      type: 'text' as const,
+      span: 6,
     },
+    {
+      name: 'machineId',
+      label: 'Máy',
+      type: 'select' as const,
+      options: [
+        { value: 'CNC-001', label: 'CNC Mill 01' },
+        { value: 'CNC-002', label: 'CNC Mill 02' },
+        { value: 'LATHE-001', label: 'CNC Lathe 01' },
+      ],
+      span: 6,
+    },
+    {
+      name: 'dateRange',
+      label: 'Khoảng thời gian',
+      type: 'dateRange' as const,
+      span: 6,
+    },
+  ];
+
+  const exportColumns = [
+    { key: 'reportNumber', title: 'Số báo cáo' },
+    { key: 'poId', title: 'PO' },
+    { key: 'machineName', title: 'Máy' },
+    { key: 'operatorName', title: 'Người vận hành' },
+    { key: 'shift', title: 'Ca' },
+    { key: 'date', title: 'Ngày' },
+    { key: 'setupTime', title: 'Setup (phút)' },
+    { key: 'runTime', title: 'Chạy máy (phút)' },
+    { key: 'outputQuantity', title: 'Sản lượng' },
+    { key: 'scrapQuantity', title: 'Phế phẩm' },
+    { key: 'defectQuantity', title: 'Lỗi' },
+    { key: 'status', title: 'Trạng thái' },
   ];
 
   return (
     <div>
-      <Card>
-        <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
-          <Col>
-            <Title level={3}>Báo cáo máy (F-PR-03-02)</Title>
-          </Col>
-          <Col>
-            <Space>
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => {
-                  form.resetFields();
-                  setEditingKey('');
-                  setIsModalVisible(true);
-                }}
-              >
-                Tạo báo cáo mới
-              </Button>
-              <Button icon={<SearchOutlined />}>
-                Tìm kiếm
-              </Button>
-            </Space>
-          </Col>
-        </Row>
+      <FormCard
+        title="Báo cáo Máy"
+        subtitle="Quản lý báo cáo hoạt động máy móc (F-PR-03-02)"
+        extra={
+          <Space>
+            <ExportButton
+              data={data}
+              columns={exportColumns}
+              filename="machine-reports"
+            />
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={handleCreate}
+            >
+              Tạo báo cáo mới
+            </Button>
+          </Space>
+        }
+      >
+        <SearchForm
+          fields={searchFields}
+          onSearch={handleSearch}
+          loading={loading}
+        />
 
-        <Table
+        <DataTable
           columns={columns}
-          dataSource={dataSource}
-          scroll={{ x: 1500 }}
+          dataSource={data}
+          loading={loading}
+          rowKey="id"
+          scroll={{ x: 1600 }}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          customActions={(record) => (
+            <PrintButton
+              data={record}
+              templateType="machine_report"
+              size="small"
+            />
+          )}
           pagination={{
+            total: data.length,
             pageSize: 10,
             showSizeChanger: true,
-            showTotal: (total) => `Tổng cộng ${total} báo cáo`,
+            showQuickJumper: true,
+            showTotal: (total) => `Tổng ${total} báo cáo`,
           }}
         />
-      </Card>
+      </FormCard>
 
+      {/* Create/Edit Modal */}
       <Modal
-        title={editingKey ? "Chỉnh sửa báo cáo máy" : "Tạo báo cáo máy mới"}
-        open={isModalVisible}
-        onCancel={() => setIsModalVisible(false)}
+        title={editingRecord ? 'Chỉnh sửa báo cáo máy' : 'Tạo báo cáo máy mới'}
+        open={modalVisible}
+        onCancel={() => {
+          setModalVisible(false);
+          form.resetFields();
+        }}
         footer={null}
         width={900}
+        destroyOnClose
       >
         <Form
           form={form}
           layout="vertical"
           onFinish={handleSubmit}
-          autoComplete="off"
+          initialValues={{
+            shift: 'morning',
+            status: 'in_progress'
+          }}
         >
-          <Row gutter={16}>
-            <Col span={8}>
-              <Form.Item
-                label="PO"
-                name="po"
-                rules={[{ required: true, message: 'Vui lòng nhập PO!' }]}
-              >
-                <Input placeholder="Nhập số PO" />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item
-                label="Mã bản vẽ"
-                name="drawingCode"
-                rules={[{ required: true, message: 'Vui lòng nhập mã bản vẽ!' }]}
-              >
-                <Input placeholder="Nhập mã bản vẽ" />
-              </Form.Item>
-            </Col>
-            <Col span={4}>
-              <Form.Item
-                label="Rev"
-                name="rev"
-                rules={[{ required: true, message: 'Vui lòng nhập Rev!' }]}
-              >
-                <Input placeholder="R1" />
-              </Form.Item>
-            </Col>
-            <Col span={4}>
-              <Form.Item
-                label="Step"
-                name="step"
-                rules={[{ required: true, message: 'Vui lòng nhập Step!' }]}
-              >
-                <Input placeholder="CNC" />
-              </Form.Item>
-            </Col>
-          </Row>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+            <Form.Item
+              name="poId"
+              label="PO"
+              rules={[{ required: true, message: 'Vui lòng chọn PO' }]}
+            >
+              <Select placeholder="Chọn PO">
+                <Option value="PO-2024-001">PO-2024-001</Option>
+                <Option value="PO-2024-002">PO-2024-002</Option>
+                <Option value="PO-2024-003">PO-2024-003</Option>
+              </Select>
+            </Form.Item>
 
-          <Row gutter={16}>
-            <Col span={8}>
-              <Form.Item
-                label="Số lượng phôi đầu vào"
-                name="inputQuantity"
-                rules={[{ required: true, message: 'Vui lòng nhập số lượng!' }]}
-              >
-                <InputNumber
-                  min={0}
-                  style={{ width: '100%' }}
-                  placeholder="0"
-                />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item
-                label="Số lượng hàng ra"
-                name="outputQuantity"
-                rules={[{ required: true, message: 'Vui lòng nhập số lượng!' }]}
-              >
-                <InputNumber
-                  min={0}
-                  style={{ width: '100%' }}
-                  placeholder="0"
-                />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item
-                label="Số lượng hư (giấy vàng/đỏ)"
-                name="defectQuantity"
-              >
-                <InputNumber
-                  min={0}
-                  style={{ width: '100%' }}
-                  placeholder="0"
-                />
-              </Form.Item>
-            </Col>
-          </Row>
+            <Form.Item
+              name="machineId"
+              label="Máy"
+              rules={[{ required: true, message: 'Vui lòng chọn máy' }]}
+            >
+              <Select placeholder="Chọn máy">
+                <Option value="CNC-001">CNC Mill 01</Option>
+                <Option value="CNC-002">CNC Mill 02</Option>
+                <Option value="LATHE-001">CNC Lathe 01</Option>
+              </Select>
+            </Form.Item>
 
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                label="Khâu tiếp nhận"
-                name="nextStep"
-              >
-                <Input placeholder="Nhập khâu tiếp nhận" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                label="Bình quân/part (phút)"
-                name="avgTimePerPart"
-              >
-                <InputNumber
-                  min={0}
-                  step={0.1}
-                  style={{ width: '100%' }}
-                  placeholder="0.0"
-                />
-              </Form.Item>
-            </Col>
-          </Row>
+            <Form.Item
+              name="operatorName"
+              label="Người vận hành"
+              rules={[{ required: true, message: 'Vui lòng nhập tên người vận hành' }]}
+            >
+              <Input placeholder="Nhập tên người vận hành" />
+            </Form.Item>
 
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                label="Thời gian setup"
-                name="setupTime"
-              >
-                <RangePicker
-                  showTime
-                  format="DD/MM/YYYY HH:mm"
-                  style={{ width: '100%' }}
-                  placeholder={['Bắt đầu', 'Kết thúc']}
-                />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                label="Thời gian chạy máy"
-                name="machineTime"
-              >
-                <RangePicker
-                  showTime
-                  format="DD/MM/YYYY HH:mm"
-                  style={{ width: '100%' }}
-                  placeholder={['Bắt đầu', 'Kết thúc']}
-                />
-              </Form.Item>
-            </Col>
-          </Row>
+            <Form.Item
+              name="shift"
+              label="Ca làm việc"
+              rules={[{ required: true, message: 'Vui lòng chọn ca làm việc' }]}
+            >
+              <Select placeholder="Chọn ca làm việc">
+                <Option value="morning">Ca sáng</Option>
+                <Option value="afternoon">Ca chiều</Option>
+                <Option value="night">Ca đêm</Option>
+              </Select>
+            </Form.Item>
 
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                label="Thời gian QC"
-                name="qcTime"
-              >
-                <RangePicker
-                  showTime
-                  format="DD/MM/YYYY HH:mm"
-                  style={{ width: '100%' }}
-                  placeholder={['Giao', 'Trả']}
-                />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                label="Đánh giá setup"
-                name="setupEvaluation"
-                initialValue="Đạt"
-              >
-                <Radio.Group>
-                  <Radio value="Đạt">Đạt</Radio>
-                  <Radio value="Không đạt">Không đạt</Radio>
-                </Radio.Group>
-              </Form.Item>
-            </Col>
-          </Row>
+            <Form.Item
+              name="date"
+              label="Ngày"
+              rules={[{ required: true, message: 'Vui lòng chọn ngày' }]}
+            >
+              <DatePicker
+                placeholder="Chọn ngày"
+                style={{ width: '100%' }}
+                format="DD/MM/YYYY"
+              />
+            </Form.Item>
+
+            <Form.Item
+              name="status"
+              label="Trạng thái"
+            >
+              <Select>
+                <Option value="in_progress">Đang xử lý</Option>
+                <Option value="completed">Hoàn thành</Option>
+                <Option value="on_hold">Tạm dừng</Option>
+              </Select>
+            </Form.Item>
+
+            <Form.Item
+              name="setupTime"
+              label="Thời gian setup (phút)"
+              rules={[{ required: true, message: 'Vui lòng nhập thời gian setup' }]}
+            >
+              <InputNumber
+                placeholder="Nhập thời gian setup"
+                style={{ width: '100%' }}
+                min={0}
+              />
+            </Form.Item>
+
+            <Form.Item
+              name="runTime"
+              label="Thời gian chạy máy (phút)"
+              rules={[{ required: true, message: 'Vui lòng nhập thời gian chạy máy' }]}
+            >
+              <InputNumber
+                placeholder="Nhập thời gian chạy máy"
+                style={{ width: '100%' }}
+                min={0}
+              />
+            </Form.Item>
+
+            <Form.Item
+              name="outputQuantity"
+              label="Sản lượng"
+              rules={[{ required: true, message: 'Vui lòng nhập sản lượng' }]}
+            >
+              <InputNumber
+                placeholder="Nhập sản lượng"
+                style={{ width: '100%' }}
+                min={0}
+              />
+            </Form.Item>
+
+            <Form.Item
+              name="scrapQuantity"
+              label="Phế phẩm"
+            >
+              <InputNumber
+                placeholder="Nhập số lượng phế phẩm"
+                style={{ width: '100%' }}
+                min={0}
+              />
+            </Form.Item>
+
+            <Form.Item
+              name="defectQuantity"
+              label="Lỗi"
+            >
+              <InputNumber
+                placeholder="Nhập số lượng lỗi"
+                style={{ width: '100%' }}
+                min={0}
+              />
+            </Form.Item>
+
+            <Form.Item
+              name="downtime"
+              label="Downtime (phút)"
+            >
+              <InputNumber
+                placeholder="Nhập thời gian dừng máy"
+                style={{ width: '100%' }}
+                min={0}
+              />
+            </Form.Item>
+          </div>
 
           <Form.Item
-            label="Vấn đề khó khăn"
-            name="issues"
+            name="downtimeReason"
+            label="Lý do downtime"
+          >
+            <Input placeholder="Nhập lý do dừng máy" />
+          </Form.Item>
+
+          <Form.Item
+            name="qcFeedback"
+            label="Phản hồi QC"
           >
             <TextArea
-              rows={4}
-              placeholder="Nhập các vấn đề gặp phải trong quá trình sản xuất..."
+              rows={2}
+              placeholder="Nhập phản hồi từ QC"
             />
           </Form.Item>
 
-          <Form.Item>
+          <Form.Item
+            name="notes"
+            label="Ghi chú"
+          >
+            <TextArea
+              rows={3}
+              placeholder="Nhập ghi chú về ca làm việc"
+            />
+          </Form.Item>
+
+          <Form.Item style={{ marginBottom: 0, textAlign: 'right' }}>
             <Space>
-              <Button type="primary" htmlType="submit" loading={loading} icon={<SaveOutlined />}>
-                {editingKey ? 'Cập nhật' : 'Lưu báo cáo'}
-              </Button>
-              <Button onClick={() => setIsModalVisible(false)}>
+              <Button onClick={() => setModalVisible(false)}>
                 Hủy
               </Button>
-              <Button icon={<PrinterOutlined />}>
-                In báo cáo
+              <Button type="primary" htmlType="submit" loading={loading}>
+                {editingRecord ? 'Cập nhật' : 'Tạo mới'}
               </Button>
             </Space>
           </Form.Item>
@@ -521,4 +594,4 @@ const MachineReport: React.FC = () => {
   );
 };
 
-export default MachineReport;
+export default MachineReportPage;
