@@ -6,6 +6,7 @@ import dayjs from 'dayjs';
 
 import { FormCard, DataTable, StatusTag, ApprovalButton, SearchForm, ExportButton, PrintButton } from '../../shared/components';
 import type { BillOfMaterials, BOMItem, ApprovalStatus } from '../../types';
+import { useMaterials, useSuppliers } from '../../hooks/useMasterData';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -17,6 +18,10 @@ const CustomerBOMPage: React.FC = () => {
   const [editingRecord, setEditingRecord] = useState<BillOfMaterials | null>(null);
   const [form] = Form.useForm();
   const [materials, setMaterials] = useState<BOMItem[]>([]);
+  
+  // Master data hooks
+  const { materials: masterMaterials } = useMaterials();
+  const { suppliers } = useSuppliers();
 
   // Mock data
   const mockData: BillOfMaterials[] = [
@@ -321,12 +326,32 @@ const CustomerBOMPage: React.FC = () => {
       key: 'materialCode',
       width: 120,
       render: (value, record, index) => (
-        <Input
+        <Select
           value={value}
-          onChange={(e) => updateMaterial(index, 'materialCode', e.target.value)}
-          placeholder="Nhập mã NVL"
+          onChange={(val) => {
+            updateMaterial(index, 'materialCode', val);
+            // Tự động điền thông tin NVL
+            const selectedMaterial = masterMaterials.find(m => m.materialCode === val);
+            if (selectedMaterial) {
+              updateMaterial(index, 'materialName', selectedMaterial.materialName);
+              updateMaterial(index, 'specification', selectedMaterial.specification || '');
+              updateMaterial(index, 'unit', selectedMaterial.unit);
+              updateMaterial(index, 'unitCost', selectedMaterial.standardCost || 0);
+              updateMaterial(index, 'supplier', selectedMaterial.supplier || '');
+            }
+          }}
+          placeholder="Chọn NVL"
           size="small"
-        />
+          style={{ width: '100%' }}
+          showSearch
+          optionFilterProp="children"
+        >
+          {masterMaterials.map(material => (
+            <Option key={material.id} value={material.materialCode}>
+              {material.materialCode}
+            </Option>
+          ))}
+        </Select>
       ),
     },
     {
@@ -338,8 +363,9 @@ const CustomerBOMPage: React.FC = () => {
         <Input
           value={value}
           onChange={(e) => updateMaterial(index, 'materialName', e.target.value)}
-          placeholder="Nhập tên NVL"
+          placeholder="Sẽ được tự động điền"
           size="small"
+          disabled
         />
       ),
     },
