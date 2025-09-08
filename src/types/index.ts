@@ -432,8 +432,6 @@ export interface SlowMovingItem {
   daysWithoutMovement: number;
   value: number;
 }
-<<<<<<< Current (Your changes)
-=======
 
 // Master Data Types
 export interface Customer extends BaseEntity {
@@ -555,4 +553,3 @@ export interface UnitOfMeasure extends BaseEntity {
   status: 'active' | 'inactive';
   notes?: string;
 }
->>>>>>> Incoming (Background Agent changes)
