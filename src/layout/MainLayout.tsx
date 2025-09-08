@@ -21,6 +21,7 @@ import {
   LogoutOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
+  DatabaseOutlined,
 } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 
@@ -187,6 +188,38 @@ const MainLayout: React.FC = () => {
           key: '/shift/setup-sheet',
           label: 'Setup Sheet Report',
           onClick: () => navigate('/shift/setup-sheet'),
+        },
+      ],
+    },
+    {
+      key: 'master',
+      icon: <DatabaseOutlined />,
+      label: 'Dữ liệu Master',
+      children: [
+        {
+          key: '/master/customer',
+          label: 'Khách hàng',
+          onClick: () => navigate('/master/customer'),
+        },
+        {
+          key: '/master/product',
+          label: 'Sản phẩm',
+          onClick: () => navigate('/master/product'),
+        },
+        {
+          key: '/master/material',
+          label: 'Nguyên vật liệu',
+          onClick: () => navigate('/master/material'),
+        },
+        {
+          key: '/master/supplier',
+          label: 'Nhà cung cấp',
+          onClick: () => navigate('/master/supplier'),
+        },
+        {
+          key: '/master/machine',
+          label: 'Máy móc thiết bị',
+          onClick: () => navigate('/master/machine'),
         },
       ],
     },
