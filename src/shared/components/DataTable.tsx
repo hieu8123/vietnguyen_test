@@ -71,11 +71,14 @@ const DataTable = <T extends Record<string, any>>({
 
   const finalColumns = showActions ? [...columns, actionColumn] : columns;
 
+  // Merge provided scroll with default x to allow custom y
+  const mergedScroll = { x: 'max-content', ...(tableProps.scroll || {}) } as TableProps<T>['scroll'];
+
   return (
     <Table
       {...tableProps}
       columns={finalColumns}
-      scroll={{ x: 'max-content' }}
+      scroll={mergedScroll}
       size="small"
       bordered
     />

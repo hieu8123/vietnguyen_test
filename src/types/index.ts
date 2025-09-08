@@ -33,6 +33,11 @@ export interface ProductionOrder extends BaseEntity {
   priority: 'low' | 'medium' | 'high' | 'urgent';
   status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
   bomId?: string;
+  drawingId?: string;
+  drawingCode?: string;
+  drawingName?: string;
+  drawingVersion?: string;
+  drawingRevision?: string;
   notes?: string;
   approvalStatus: ApprovalStatus;
   approvedBy?: string;
@@ -551,5 +556,41 @@ export interface UnitOfMeasure extends BaseEntity {
   conversionFactor?: number;
   symbol?: string;
   status: 'active' | 'inactive';
+  notes?: string;
+}
+
+// Drawing Management Types
+export interface Drawing extends BaseEntity {
+  drawingCode: string;
+  drawingName: string;
+  productCode?: string;
+  productName?: string;
+  category: 'product' | 'part' | 'assembly' | 'detail';
+  version: string;
+  revision: string;
+  drawingFile?: string;
+  fileSize?: number;
+  fileType?: string;
+  description?: string;
+  status: 'active' | 'inactive' | 'obsolete';
+  approvalStatus: ApprovalStatus;
+  approvedBy?: string;
+  approvedAt?: string;
+  notes?: string;
+}
+
+export interface DrawingVersion extends BaseEntity {
+  drawingId: string;
+  version: string;
+  revision: string;
+  versionName?: string;
+  changeDescription?: string;
+  drawingFile: string;
+  fileSize: number;
+  fileType: string;
+  isActive: boolean;
+  approvalStatus: ApprovalStatus;
+  approvedBy?: string;
+  approvedAt?: string;
   notes?: string;
 }
