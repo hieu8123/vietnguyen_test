@@ -42,6 +42,15 @@ import ProductionStatistics from './pages/statistics/ProductionStatistics';
 import QCAnalytics from './pages/statistics/QCAnalytics';
 import WarehouseAnalytics from './pages/statistics/WarehouseAnalytics';
 
+// Master Data
+import { 
+  CustomerMaster, 
+  ProductMaster, 
+  MaterialMaster, 
+  SupplierMaster, 
+  MachineMaster 
+} from './pages/master';
+
 import './App.css';
 
 function App() {
@@ -91,6 +100,15 @@ function App() {
               <Route path="leader-handover" element={<LeaderHandover />} />
               <Route path="worker-handover" element={<WorkerHandover />} />
               <Route path="setup-sheet" element={<SetupSheet />} />
+            </Route>
+            
+            {/* Master Data Routes */}
+            <Route path="master">
+              <Route path="customer" element={<CustomerMaster />} />
+              <Route path="product" element={<ProductMaster />} />
+              <Route path="material" element={<MaterialMaster />} />
+              <Route path="supplier" element={<SupplierMaster />} />
+              <Route path="machine" element={<MachineMaster />} />
             </Route>
             
             {/* Statistics Routes */}

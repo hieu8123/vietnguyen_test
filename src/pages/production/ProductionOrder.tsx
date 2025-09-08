@@ -6,6 +6,7 @@ import dayjs from 'dayjs';
 
 import { FormCard, DataTable, StatusTag, ApprovalButton, SearchForm, ExportButton, PrintButton } from '../../shared/components';
 import type { ProductionOrder, ApprovalStatus } from '../../types';
+import { useCustomers, useProducts } from '../../hooks/useMasterData';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -16,6 +17,10 @@ const ProductionOrderPage: React.FC = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingRecord, setEditingRecord] = useState<ProductionOrder | null>(null);
   const [form] = Form.useForm();
+  
+  // Master data hooks
+  const { customers } = useCustomers();
+  const { products } = useProducts();
 
   // Mock data
   const mockData: ProductionOrder[] = [
@@ -414,9 +419,22 @@ const ProductionOrderPage: React.FC = () => {
             <Form.Item
               name="customerName"
               label="Khách hàng"
-              rules={[{ required: true, message: 'Vui lòng nhập tên khách hàng' }]}
+              rules={[{ required: true, message: 'Vui lòng chọn khách hàng' }]}
             >
-              <Input placeholder="Nhập tên khách hàng" />
+              <Select 
+                placeholder="Chọn khách hàng"
+                showSearch
+                optionFilterProp="children"
+                filterOption={(input, option) =>
+                  (option?.children as string)?.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                }
+              >
+                {customers.map(customer => (
+                  <Option key={customer.id} value={customer.customerName}>
+                    {customer.customerName} ({customer.customerCode})
+                  </Option>
+                ))}
+              </Select>
             </Form.Item>
 
             <Form.Item
@@ -428,18 +446,41 @@ const ProductionOrderPage: React.FC = () => {
 
             <Form.Item
               name="productName"
-              label="Tên sản phẩm"
-              rules={[{ required: true, message: 'Vui lòng nhập tên sản phẩm' }]}
+              label="Sản phẩm"
+              rules={[{ required: true, message: 'Vui lòng chọn sản phẩm' }]}
             >
-              <Input placeholder="Nhập tên sản phẩm" />
+              <Select 
+                placeholder="Chọn sản phẩm"
+                showSearch
+                optionFilterProp="children"
+                filterOption={(input, option) =>
+                  (option?.children as string)?.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                }
+                onChange={(value, option: any) => {
+                  // Tự động điền mã sản phẩm và đơn vị
+                  const selectedProduct = products.find(p => p.productName === value);
+                  if (selectedProduct) {
+                    form.setFieldsValue({
+                      productCode: selectedProduct.productCode,
+                      unit: selectedProduct.unit
+                    });
+                  }
+                }}
+              >
+                {products.map(product => (
+                  <Option key={product.id} value={product.productName}>
+                    {product.productName} ({product.productCode})
+                  </Option>
+                ))}
+              </Select>
             </Form.Item>
 
             <Form.Item
               name="productCode"
               label="Mã sản phẩm"
-              rules={[{ required: true, message: 'Vui lòng nhập mã sản phẩm' }]}
+              rules={[{ required: true, message: 'Mã sản phẩm sẽ được tự động điền' }]}
             >
-              <Input placeholder="Nhập mã sản phẩm" />
+              <Input placeholder="Sẽ được tự động điền" disabled />
             </Form.Item>
 
             <Form.Item

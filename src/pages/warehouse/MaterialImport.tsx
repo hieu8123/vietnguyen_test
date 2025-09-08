@@ -6,6 +6,7 @@ import dayjs from 'dayjs';
 
 import { FormCard, DataTable, StatusTag, ApprovalButton, SearchForm, ExportButton, PrintButton } from '../../shared/components';
 import type { MaterialTransaction, ApprovalStatus } from '../../types';
+import { useMaterials, useSuppliers } from '../../hooks/useMasterData';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -16,6 +17,10 @@ const MaterialImportPage: React.FC = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingRecord, setEditingRecord] = useState<MaterialTransaction | null>(null);
   const [form] = Form.useForm();
+  
+  // Master data hooks
+  const { materials } = useMaterials();
+  const { suppliers } = useSuppliers();
 
   // Mock data
   const mockData: MaterialTransaction[] = [
@@ -436,19 +441,46 @@ const MaterialImportPage: React.FC = () => {
         >
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
             <Form.Item
-              name="materialCode"
-              label="Mã nguyên vật liệu"
-              rules={[{ required: true, message: 'Vui lòng nhập mã NVL' }]}
+              name="materialName"
+              label="Nguyên vật liệu"
+              rules={[{ required: true, message: 'Vui lòng chọn nguyên vật liệu' }]}
             >
-              <Input placeholder="Nhập mã NVL" />
+              <Select 
+                placeholder="Chọn nguyên vật liệu"
+                showSearch
+                optionFilterProp="children"
+                filterOption={(input, option) =>
+                  (option?.children as string)?.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                }
+                onChange={(value, option: any) => {
+                  // Tự động điền thông tin NVL
+                  const selectedMaterial = materials.find(m => m.materialName === value);
+                  if (selectedMaterial) {
+                    form.setFieldsValue({
+                      materialCode: selectedMaterial.materialCode,
+                      unit: selectedMaterial.unit,
+                      unitPrice: selectedMaterial.standardCost,
+                      storageLocation: selectedMaterial.storageLocation,
+                      supplierName: selectedMaterial.supplier,
+                      supplierId: selectedMaterial.supplierId
+                    });
+                  }
+                }}
+              >
+                {materials.map(material => (
+                  <Option key={material.id} value={material.materialName}>
+                    {material.materialName} ({material.materialCode})
+                  </Option>
+                ))}
+              </Select>
             </Form.Item>
 
             <Form.Item
-              name="materialName"
-              label="Tên nguyên vật liệu"
-              rules={[{ required: true, message: 'Vui lòng nhập tên NVL' }]}
+              name="materialCode"
+              label="Mã nguyên vật liệu"
+              rules={[{ required: true, message: 'Mã NVL sẽ được tự động điền' }]}
             >
-              <Input placeholder="Nhập tên NVL" />
+              <Input placeholder="Sẽ được tự động điền" disabled />
             </Form.Item>
 
             <Form.Item
@@ -499,10 +531,31 @@ const MaterialImportPage: React.FC = () => {
 
             <Form.Item
               name="supplierName"
-              label="Tên nhà cung cấp"
-              rules={[{ required: true, message: 'Vui lòng nhập tên nhà cung cấp' }]}
+              label="Nhà cung cấp"
+              rules={[{ required: true, message: 'Nhà cung cấp sẽ được tự động điền' }]}
             >
-              <Input placeholder="Nhập tên nhà cung cấp" />
+              <Select 
+                placeholder="Sẽ được tự động điền hoặc chọn khác"
+                showSearch
+                optionFilterProp="children"
+                filterOption={(input, option) =>
+                  (option?.children as string)?.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                }
+                onChange={(value, option: any) => {
+                  const selectedSupplier = suppliers.find(s => s.supplierName === value);
+                  if (selectedSupplier) {
+                    form.setFieldsValue({
+                      supplierId: selectedSupplier.supplierCode
+                    });
+                  }
+                }}
+              >
+                {suppliers.map(supplier => (
+                  <Option key={supplier.id} value={supplier.supplierName}>
+                    {supplier.supplierName} ({supplier.supplierCode})
+                  </Option>
+                ))}
+              </Select>
             </Form.Item>
 
             <Form.Item
