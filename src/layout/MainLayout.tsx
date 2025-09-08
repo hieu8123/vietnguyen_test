@@ -221,6 +221,11 @@ const MainLayout: React.FC = () => {
           label: 'Máy móc thiết bị',
           onClick: () => navigate('/master/machine'),
         },
+        {
+          key: '/master/drawing',
+          label: 'Bản vẽ kỹ thuật',
+          onClick: () => navigate('/master/drawing'),
+        },
       ],
     },
     {

@@ -48,7 +48,8 @@ import {
   ProductMaster, 
   MaterialMaster, 
   SupplierMaster, 
-  MachineMaster 
+  MachineMaster,
+  DrawingMaster
 } from './pages/master';
 
 import './App.css';
@@ -109,6 +110,7 @@ function App() {
               <Route path="material" element={<MaterialMaster />} />
               <Route path="supplier" element={<SupplierMaster />} />
               <Route path="machine" element={<MachineMaster />} />
+              <Route path="drawing" element={<DrawingMaster />} />
             </Route>
             
             {/* Statistics Routes */}

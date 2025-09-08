@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import type { Customer, Product, Material, Supplier, Machine } from '../types';
+import type { Customer, Product, Material, Supplier, Machine, Drawing, DrawingVersion } from '../types';
 
 // Mock data - trong thực tế sẽ gọi API
 const mockCustomers: Customer[] = [
@@ -414,4 +414,202 @@ export const useMachines = () => {
   }, []);
 
   return { machines, loading };
+};
+
+// Mock drawings data
+const mockDrawings: Drawing[] = [
+  {
+    id: '1',
+    drawingCode: 'DWG-PCB-A1-001',
+    drawingName: 'PCB Board A1 Layout',
+    productCode: 'PCB-A1-001',
+    productName: 'PCB Board A1',
+    category: 'product',
+    version: 'V1.2',
+    revision: 'REV-C',
+    drawingFile: 'PCB-A1-V1.2-REVC.pdf',
+    fileSize: 2048000,
+    fileType: 'pdf',
+    description: 'Bản vẽ layout PCB cho sản phẩm A1',
+    status: 'active',
+    approvalStatus: 'approved',
+    approvedBy: 'Nguyễn Văn A',
+    approvedAt: '2024-01-05T10:00:00Z',
+    createdAt: '2024-01-01T08:00:00Z',
+    updatedAt: '2024-01-05T10:00:00Z',
+    createdBy: 'admin',
+    updatedBy: 'admin'
+  },
+  {
+    id: '2',
+    drawingCode: 'DWG-CON-B-002',
+    drawingName: 'Connector Type B Detail',
+    productCode: 'CON-B-002',
+    productName: 'Connector Type B',
+    category: 'detail',
+    version: 'V2.0',
+    revision: 'REV-A',
+    drawingFile: 'CON-B-V2.0-REVA.dwg',
+    fileSize: 1536000,
+    fileType: 'dwg',
+    description: 'Bản vẽ chi tiết connector type B',
+    status: 'active',
+    approvalStatus: 'approved',
+    createdAt: '2024-01-02T09:00:00Z',
+    updatedAt: '2024-01-02T09:00:00Z',
+    createdBy: 'admin'
+  },
+  {
+    id: '3',
+    drawingCode: 'DWG-HS-C-003',
+    drawingName: 'Heat Sink Assembly',
+    productCode: 'HS-C-003',
+    productName: 'Heat Sink Model C',
+    category: 'assembly',
+    version: 'V1.0',
+    revision: 'REV-B',
+    drawingFile: 'HS-C-V1.0-REVB.pdf',
+    fileSize: 3072000,
+    fileType: 'pdf',
+    description: 'Bản vẽ lắp ráp heat sink model C',
+    status: 'active',
+    approvalStatus: 'approved',
+    approvedBy: 'Trần Thị B',
+    approvedAt: '2024-01-03T14:00:00Z',
+    createdAt: '2024-01-01T10:00:00Z',
+    updatedAt: '2024-01-10T16:00:00Z',
+    createdBy: 'admin',
+    updatedBy: 'admin'
+  }
+];
+
+// Mock drawing versions data
+const mockDrawingVersions: DrawingVersion[] = [
+  {
+    id: '1',
+    drawingId: '1',
+    version: 'V1.2',
+    revision: 'REV-C',
+    versionName: 'Final Production Version',
+    changeDescription: 'Cập nhật kích thước pad và via',
+    drawingFile: 'PCB-A1-V1.2-REVC.pdf',
+    fileSize: 2048000,
+    fileType: 'pdf',
+    isActive: true,
+    approvalStatus: 'approved',
+    approvedBy: 'Nguyễn Văn A',
+    approvedAt: '2024-01-05T10:00:00Z',
+    createdAt: '2024-01-05T08:00:00Z',
+    updatedAt: '2024-01-05T10:00:00Z',
+    createdBy: 'admin',
+    updatedBy: 'admin'
+  },
+  {
+    id: '2',
+    drawingId: '1',
+    version: 'V1.1',
+    revision: 'REV-B',
+    versionName: 'Prototype Version',
+    changeDescription: 'Điều chỉnh routing và placement',
+    drawingFile: 'PCB-A1-V1.1-REVB.pdf',
+    fileSize: 1920000,
+    fileType: 'pdf',
+    isActive: false,
+    approvalStatus: 'approved',
+    approvedBy: 'Nguyễn Văn A',
+    approvedAt: '2024-01-03T14:00:00Z',
+    createdAt: '2024-01-03T08:00:00Z',
+    updatedAt: '2024-01-03T14:00:00Z',
+    createdBy: 'admin',
+    updatedBy: 'admin'
+  },
+  {
+    id: '3',
+    drawingId: '2',
+    version: 'V2.0',
+    revision: 'REV-A',
+    versionName: 'Production Release',
+    changeDescription: 'Phiên bản đầu tiên cho sản xuất',
+    drawingFile: 'CON-B-V2.0-REVA.dwg',
+    fileSize: 1536000,
+    fileType: 'dwg',
+    isActive: true,
+    approvalStatus: 'approved',
+    approvedBy: 'Trần Thị B',
+    approvedAt: '2024-01-02T14:00:00Z',
+    createdAt: '2024-01-02T09:00:00Z',
+    updatedAt: '2024-01-02T14:00:00Z',
+    createdBy: 'admin',
+    updatedBy: 'admin'
+  },
+  {
+    id: '4',
+    drawingId: '3',
+    version: 'V1.0',
+    revision: 'REV-B',
+    versionName: 'Updated Assembly',
+    changeDescription: 'Cập nhật mounting holes và dimensions',
+    drawingFile: 'HS-C-V1.0-REVB.pdf',
+    fileSize: 3072000,
+    fileType: 'pdf',
+    isActive: true,
+    approvalStatus: 'approved',
+    approvedBy: 'Trần Thị B',
+    approvedAt: '2024-01-03T14:00:00Z',
+    createdAt: '2024-01-01T10:00:00Z',
+    updatedAt: '2024-01-10T16:00:00Z',
+    createdBy: 'admin',
+    updatedBy: 'admin'
+  }
+];
+
+export const useDrawings = () => {
+  const [drawings, setDrawings] = useState<Drawing[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDrawings = async () => {
+      setLoading(true);
+      try {
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 500));
+        setDrawings(mockDrawings.filter(d => d.status === 'active'));
+      } catch (error) {
+        console.error('Error fetching drawings:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDrawings();
+  }, []);
+
+  return { drawings, loading };
+};
+
+export const useDrawingVersions = (drawingId?: string) => {
+  const [versions, setVersions] = useState<DrawingVersion[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchVersions = async () => {
+      setLoading(true);
+      try {
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 300));
+        const filteredVersions = drawingId 
+          ? mockDrawingVersions.filter(v => v.drawingId === drawingId)
+          : mockDrawingVersions;
+        setVersions(filteredVersions);
+      } catch (error) {
+        console.error('Error fetching drawing versions:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVersions();
+  }, [drawingId]);
+
+  return { versions, loading };
 };

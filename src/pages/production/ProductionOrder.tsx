@@ -6,7 +6,7 @@ import dayjs from 'dayjs';
 
 import { FormCard, DataTable, StatusTag, ApprovalButton, SearchForm, ExportButton, PrintButton } from '../../shared/components';
 import type { ProductionOrder, ApprovalStatus } from '../../types';
-import { useCustomers, useProducts } from '../../hooks/useMasterData';
+import { useCustomers, useProducts, useDrawings, useDrawingVersions } from '../../hooks/useMasterData';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -16,11 +16,14 @@ const ProductionOrderPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingRecord, setEditingRecord] = useState<ProductionOrder | null>(null);
+  const [selectedDrawingId, setSelectedDrawingId] = useState<string | undefined>();
   const [form] = Form.useForm();
   
   // Master data hooks
   const { customers } = useCustomers();
   const { products } = useProducts();
+  const { drawings } = useDrawings();
+  const { versions } = useDrawingVersions(selectedDrawingId);
 
   // Mock data
   const mockData: ProductionOrder[] = [
@@ -37,6 +40,11 @@ const ProductionOrderPage: React.FC = () => {
       priority: 'high',
       status: 'in_progress',
       bomId: 'BOM-001',
+      drawingId: '1',
+      drawingCode: 'DWG-PCB-A1-001',
+      drawingName: 'PCB Board A1 Layout',
+      drawingVersion: 'V1.2',
+      drawingRevision: 'REV-C',
       notes: 'Yêu cầu đặc biệt về chất lượng bề mặt',
       approvalStatus: 'approved',
       approvedBy: 'Nguyễn Văn A',
@@ -59,6 +67,11 @@ const ProductionOrderPage: React.FC = () => {
       priority: 'medium',
       status: 'pending',
       bomId: 'BOM-002',
+      drawingId: '2',
+      drawingCode: 'DWG-CON-B-002',
+      drawingName: 'Connector Type B Detail',
+      drawingVersion: 'V2.0',
+      drawingRevision: 'REV-A',
       notes: 'Đóng gói theo yêu cầu đặc biệt',
       approvalStatus: 'pending',
       createdAt: '2024-01-02T09:00:00Z',
@@ -78,6 +91,11 @@ const ProductionOrderPage: React.FC = () => {
       priority: 'urgent',
       status: 'completed',
       bomId: 'BOM-003',
+      drawingId: '3',
+      drawingCode: 'DWG-HS-C-003',
+      drawingName: 'Heat Sink Assembly',
+      drawingVersion: 'V1.0',
+      drawingRevision: 'REV-B',
       approvalStatus: 'approved',
       approvedBy: 'Trần Thị B',
       approvedAt: '2024-01-03T14:00:00Z',
@@ -107,12 +125,14 @@ const ProductionOrderPage: React.FC = () => {
 
   const handleCreate = () => {
     setEditingRecord(null);
+    setSelectedDrawingId(undefined);
     form.resetFields();
     setModalVisible(true);
   };
 
   const handleEdit = (record: ProductionOrder) => {
     setEditingRecord(record);
+    setSelectedDrawingId(record.drawingId);
     form.setFieldsValue({
       ...record,
       dueDate: dayjs(record.dueDate)
@@ -173,7 +193,7 @@ const ProductionOrderPage: React.FC = () => {
     }
   };
 
-  const handleApprove = async (record: ProductionOrder, comments?: string) => {
+  const handleApprove = async (record: ProductionOrder, _comments?: string) => {
     try {
       const updatedData = data.map(item => 
         item.id === record.id 
@@ -191,7 +211,7 @@ const ProductionOrderPage: React.FC = () => {
     }
   };
 
-  const handleReject = async (record: ProductionOrder, comments?: string) => {
+  const handleReject = async (record: ProductionOrder, _comments?: string) => {
     try {
       const updatedData = data.map(item => 
         item.id === record.id 
@@ -261,6 +281,20 @@ const ProductionOrderPage: React.FC = () => {
       render: (value) => <StatusTag status={value} type="general" />,
     },
     {
+      title: 'Bản vẽ',
+      dataIndex: 'drawingCode',
+      key: 'drawingCode',
+      width: 150,
+      render: (value, record) => value ? (
+        <div>
+          <div style={{ fontWeight: 500 }}>{value}</div>
+          <div style={{ fontSize: '12px', color: '#666' }}>
+            {record.drawingVersion} - {record.drawingRevision}
+          </div>
+        </div>
+      ) : '-',
+    },
+    {
       title: 'Trạng thái',
       dataIndex: 'status',
       key: 'status',
@@ -323,6 +357,9 @@ const ProductionOrderPage: React.FC = () => {
     { key: 'productCode', title: 'Mã sản phẩm' },
     { key: 'quantity', title: 'Số lượng' },
     { key: 'unit', title: 'Đơn vị' },
+    { key: 'drawingCode', title: 'Mã bản vẽ' },
+    { key: 'drawingVersion', title: 'Version' },
+    { key: 'drawingRevision', title: 'Revision' },
     { key: 'dueDate', title: 'Hạn chót' },
     { key: 'priority', title: 'Độ ưu tiên' },
     { key: 'status', title: 'Trạng thái' },
@@ -400,6 +437,7 @@ const ProductionOrderPage: React.FC = () => {
         open={modalVisible}
         onCancel={() => {
           setModalVisible(false);
+          setSelectedDrawingId(undefined);
           form.resetFields();
         }}
         footer={null}
@@ -426,7 +464,7 @@ const ProductionOrderPage: React.FC = () => {
                 showSearch
                 optionFilterProp="children"
                 filterOption={(input, option) =>
-                  (option?.children as string)?.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                  (option?.label as string)?.toLowerCase().indexOf(input.toLowerCase()) >= 0
                 }
               >
                 {customers.map(customer => (
@@ -454,9 +492,9 @@ const ProductionOrderPage: React.FC = () => {
                 showSearch
                 optionFilterProp="children"
                 filterOption={(input, option) =>
-                  (option?.children as string)?.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                  (option?.label as string)?.toLowerCase().indexOf(input.toLowerCase()) >= 0
                 }
-                onChange={(value, option: any) => {
+                onChange={(value) => {
                   // Tự động điền mã sản phẩm và đơn vị
                   const selectedProduct = products.find(p => p.productName === value);
                   if (selectedProduct) {
@@ -543,6 +581,108 @@ const ProductionOrderPage: React.FC = () => {
               <Option value="BOM-002">BOM-002 - Connector Type B</Option>
               <Option value="BOM-003">BOM-003 - Heat Sink Model C</Option>
             </Select>
+          </Form.Item>
+
+          <div style={{ gridColumn: '1 / -1' }}>
+            <h4 style={{ margin: '16px 0 8px 0', borderBottom: '1px solid #f0f0f0', paddingBottom: '8px' }}>
+              Thông tin bản vẽ
+            </h4>
+          </div>
+
+          <Form.Item
+            name="drawingId"
+            label="Bản vẽ"
+          >
+            <Select 
+              placeholder="Chọn bản vẽ"
+              showSearch
+              optionFilterProp="children"
+              filterOption={(input, option) =>
+                (option?.label as string)?.toLowerCase().indexOf(input.toLowerCase()) >= 0
+              }
+              onChange={(value) => {
+                setSelectedDrawingId(value);
+                // Tự động điền thông tin bản vẽ
+                const selectedDrawing = drawings.find(d => d.id === value);
+                if (selectedDrawing) {
+                  form.setFieldsValue({
+                    drawingCode: selectedDrawing.drawingCode,
+                    drawingName: selectedDrawing.drawingName,
+                    drawingVersion: selectedDrawing.version,
+                    drawingRevision: selectedDrawing.revision
+                  });
+                } else {
+                  form.setFieldsValue({
+                    drawingCode: undefined,
+                    drawingName: undefined,
+                    drawingVersion: undefined,
+                    drawingRevision: undefined
+                  });
+                }
+              }}
+              allowClear
+              onClear={() => {
+                setSelectedDrawingId(undefined);
+                form.setFieldsValue({
+                  drawingCode: undefined,
+                  drawingName: undefined,
+                  drawingVersion: undefined,
+                  drawingRevision: undefined
+                });
+              }}
+            >
+              {drawings.map(drawing => (
+                <Option key={drawing.id} value={drawing.id}>
+                  {drawing.drawingName} ({drawing.drawingCode})
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            name="drawingVersion"
+            label="Version & Revision"
+          >
+            <Select 
+              placeholder="Chọn version"
+              showSearch
+              optionFilterProp="children"
+              filterOption={(input, option) =>
+                (option?.label as string)?.toLowerCase().indexOf(input.toLowerCase()) >= 0
+              }
+              onChange={(value) => {
+                // Tự động điền revision khi chọn version
+                const selectedVersion = versions.find(v => `${v.version}-${v.revision}` === value);
+                if (selectedVersion) {
+                  form.setFieldsValue({
+                    drawingVersion: selectedVersion.version,
+                    drawingRevision: selectedVersion.revision
+                  });
+                }
+              }}
+              disabled={!selectedDrawingId}
+            >
+              {versions.filter(v => v.isActive).map(version => (
+                <Option key={version.id} value={`${version.version}-${version.revision}`}>
+                  {version.version} - {version.revision}
+                  {version.versionName && ` (${version.versionName})`}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            name="drawingCode"
+            label="Mã bản vẽ"
+          >
+            <Input placeholder="Sẽ được tự động điền" disabled />
+          </Form.Item>
+
+          <Form.Item
+            name="drawingName"
+            label="Tên bản vẽ"
+          >
+            <Input placeholder="Sẽ được tự động điền" disabled />
           </Form.Item>
 
           <Form.Item
