@@ -432,3 +432,127 @@ export interface SlowMovingItem {
   daysWithoutMovement: number;
   value: number;
 }
+<<<<<<< Current (Your changes)
+=======
+
+// Master Data Types
+export interface Customer extends BaseEntity {
+  customerCode: string;
+  customerName: string;
+  contactPerson?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  taxCode?: string;
+  paymentTerms?: string;
+  creditLimit?: number;
+  status: 'active' | 'inactive';
+  notes?: string;
+}
+
+export interface Product extends BaseEntity {
+  productCode: string;
+  productName: string;
+  category: string;
+  specification?: string;
+  unit: string;
+  standardCost?: number;
+  sellingPrice?: number;
+  leadTime?: number; // days
+  minOrderQuantity?: number;
+  status: 'active' | 'inactive' | 'discontinued';
+  bomId?: string;
+  notes?: string;
+}
+
+export interface Material extends BaseEntity {
+  materialCode: string;
+  materialName: string;
+  category: string;
+  specification?: string;
+  unit: string;
+  standardCost?: number;
+  supplier?: string;
+  supplierId?: string;
+  minimumStock?: number;
+  maximumStock?: number;
+  leadTime?: number; // days
+  storageLocation?: string;
+  status: 'active' | 'inactive';
+  notes?: string;
+}
+
+export interface Supplier extends BaseEntity {
+  supplierCode: string;
+  supplierName: string;
+  contactPerson?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  taxCode?: string;
+  paymentTerms?: string;
+  deliveryTerms?: string;
+  qualityRating?: number; // 1-5 stars
+  status: 'active' | 'inactive' | 'blacklisted';
+  notes?: string;
+}
+
+export interface Machine extends BaseEntity {
+  machineCode: string;
+  machineName: string;
+  type: string;
+  manufacturer?: string;
+  model?: string;
+  serialNumber?: string;
+  installationDate?: string;
+  capacity?: number;
+  status: 'active' | 'maintenance' | 'breakdown' | 'inactive';
+  location?: string;
+  maintenanceSchedule?: string;
+  lastMaintenanceDate?: string;
+  nextMaintenanceDate?: string;
+  notes?: string;
+}
+
+export interface Employee extends BaseEntity {
+  employeeCode: string;
+  fullName: string;
+  department: string;
+  position: string;
+  shift?: 'morning' | 'afternoon' | 'night';
+  phone?: string;
+  email?: string;
+  hireDate?: string;
+  skills?: string[];
+  certifications?: string[];
+  status: 'active' | 'inactive' | 'terminated';
+  notes?: string;
+}
+
+export interface StorageLocation extends BaseEntity {
+  locationCode: string;
+  locationName: string;
+  zone: string;
+  aisle?: string;
+  shelf?: string;
+  bin?: string;
+  capacity?: number;
+  currentOccupancy?: number;
+  materialType?: string;
+  temperature?: number;
+  humidity?: number;
+  status: 'active' | 'inactive' | 'maintenance';
+  notes?: string;
+}
+
+export interface UnitOfMeasure extends BaseEntity {
+  unitCode: string;
+  unitName: string;
+  unitType: 'length' | 'weight' | 'volume' | 'quantity' | 'time' | 'area';
+  baseUnit?: string;
+  conversionFactor?: number;
+  symbol?: string;
+  status: 'active' | 'inactive';
+  notes?: string;
+}
+>>>>>>> Incoming (Background Agent changes)

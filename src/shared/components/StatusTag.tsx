@@ -11,7 +11,7 @@ import {
 
 interface StatusTagProps {
   status: string;
-  type?: 'production' | 'quality' | 'approval' | 'delivery' | 'general';
+  type?: 'production' | 'quality' | 'approval' | 'delivery' | 'general' | 'machine';
 }
 
 const StatusTag: React.FC<StatusTagProps> = ({ status, type = 'general' }) => {
@@ -93,6 +93,30 @@ const StatusTag: React.FC<StatusTagProps> = ({ status, type = 'general' }) => {
         case 'returned':
         case 'trả lại':
           return { color: 'warning', icon: <ExclamationCircleOutlined />, text: 'Trả lại' };
+        default:
+          return { color: 'default', icon: null, text: status };
+      }
+    }
+    
+    // Machine statuses
+    if (type === 'machine') {
+      switch (lowerStatus) {
+        case 'active':
+        case 'running':
+        case 'hoạt động':
+          return { color: 'success', icon: <CheckCircleOutlined />, text: 'Hoạt động' };
+        case 'maintenance':
+        case 'bảo trì':
+          return { color: 'warning', icon: <ExclamationCircleOutlined />, text: 'Bảo trì' };
+        case 'breakdown':
+        case 'hỏng hóc':
+          return { color: 'error', icon: <CloseCircleOutlined />, text: 'Hỏng hóc' };
+        case 'idle':
+        case 'nghỉ':
+          return { color: 'default', icon: <MinusCircleOutlined />, text: 'Nghỉ' };
+        case 'inactive':
+        case 'không hoạt động':
+          return { color: 'default', icon: <MinusCircleOutlined />, text: 'Không hoạt động' };
         default:
           return { color: 'default', icon: null, text: status };
       }
