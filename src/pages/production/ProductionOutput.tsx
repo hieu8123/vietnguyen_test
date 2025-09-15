@@ -7,7 +7,7 @@ const ProductionOutput: React.FC = () => {
   return (
     <Card>
       <Title level={3}>Báo cáo sản lượng</Title>
-      <p>Form này đang được phát triển... a</p>
+      <p>Form này đang được phát triển... a a</p>
     </Card>
   );
 };
