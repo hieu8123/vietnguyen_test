@@ -4,7 +4,7 @@ import { PlusOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 
-import { FormCard, DataTable, StatusTag, SearchForm, ExportButton } from '../../shared/components';
+import { FormCard, DataTable, StatusTag, ExportButton } from '../../shared/components';
 import type { Machine } from '../../types';
 
 const { Option } = Select;
